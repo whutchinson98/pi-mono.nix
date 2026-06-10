@@ -1,0 +1,49 @@
+name: Sync fork with upstream
+
+on:
+  schedule:
+    # Daily at 04:17 UTC (off the hour to avoid GitHub's peak cron load)
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # The default GITHUB_TOKEN cannot push commits that modify
+          # .github/workflows (no `workflows` scope). When upstream changes
+          # its workflow files, the push will be rejected unless SYNC_TOKEN
+          # is set to a fine-grained PAT with contents + workflows write.
+          token: ${{ secrets.SYNC_TOKEN || github.token }}
+
+      - name: Merge upstream/main and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git remote add upstream https://github.com/earendil-works/pi.git
+          git fetch upstream main
+
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "Already up to date with upstream." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if ! git merge --no-edit upstream/main; then
+            git merge --abort
+            echo "Merge conflict with upstream — resolve manually:" >> "$GITHUB_STEP_SUMMARY"
+            echo '`git fetch upstream && git merge upstream/main`' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          new_commits=$(git rev-list --count HEAD ^origin/main)
+          git push origin main
+          echo "Merged $new_commits new commit(s) from upstream." >> "$GITHUB_STEP_SUMMARY"
