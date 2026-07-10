@@ -522,7 +522,7 @@ export const VERCEL_AI_GATEWAY_MODELS = {
 		baseUrl: "https://ai-gateway.vercel.sh",
 		compat: {"forceAdaptiveThinking":true},
 		reasoning: true,
-		thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+		thinkingLevelMap: {"off":null,"xhigh":"xhigh","max":"max"},
 		input: ["text", "image"],
 		cost: {
 			input: 10,
@@ -609,7 +609,7 @@ export const VERCEL_AI_GATEWAY_MODELS = {
 		baseUrl: "https://ai-gateway.vercel.sh",
 		compat: {"forceAdaptiveThinking":true},
 		reasoning: true,
-		thinkingLevelMap: {"xhigh":"max"},
+		thinkingLevelMap: {"max":"max"},
 		input: ["text", "image"],
 		cost: {
 			input: 5,
@@ -628,7 +628,7 @@ export const VERCEL_AI_GATEWAY_MODELS = {
 		baseUrl: "https://ai-gateway.vercel.sh",
 		compat: {"forceAdaptiveThinking":true,"supportsTemperature":false},
 		reasoning: true,
-		thinkingLevelMap: {"xhigh":"xhigh"},
+		thinkingLevelMap: {"xhigh":"xhigh","max":"max"},
 		input: ["text", "image"],
 		cost: {
 			input: 5,
@@ -647,7 +647,7 @@ export const VERCEL_AI_GATEWAY_MODELS = {
 		baseUrl: "https://ai-gateway.vercel.sh",
 		compat: {"forceAdaptiveThinking":true,"supportsTemperature":false},
 		reasoning: true,
-		thinkingLevelMap: {"xhigh":"xhigh"},
+		thinkingLevelMap: {"xhigh":"xhigh","max":"max"},
 		input: ["text", "image"],
 		cost: {
 			input: 5,
@@ -700,6 +700,7 @@ export const VERCEL_AI_GATEWAY_MODELS = {
 		baseUrl: "https://ai-gateway.vercel.sh",
 		compat: {"forceAdaptiveThinking":true},
 		reasoning: true,
+		thinkingLevelMap: {"max":"max"},
 		input: ["text", "image"],
 		cost: {
 			input: 3,
@@ -718,6 +719,7 @@ export const VERCEL_AI_GATEWAY_MODELS = {
 		baseUrl: "https://ai-gateway.vercel.sh",
 		compat: {"forceAdaptiveThinking":true},
 		reasoning: true,
+		thinkingLevelMap: {"xhigh":"xhigh","max":"max"},
 		input: ["text", "image"],
 		cost: {
 			input: 2,
@@ -943,7 +945,7 @@ export const VERCEL_AI_GATEWAY_MODELS = {
 		cost: {
 			input: 0.14,
 			output: 0.28,
-			cacheRead: 0.0028,
+			cacheRead: 0.028,
 			cacheWrite: 0,
 		},
 		contextWindow: 1000000,
@@ -1390,6 +1392,23 @@ export const VERCEL_AI_GATEWAY_MODELS = {
 		},
 		contextWindow: 128000,
 		maxTokens: 8192,
+	} satisfies Model<"anthropic-messages">,
+	"meta/muse-spark-1.1": {
+		id: "meta/muse-spark-1.1",
+		name: "Muse Spark 1.1",
+		api: "anthropic-messages",
+		provider: "vercel-ai-gateway",
+		baseUrl: "https://ai-gateway.vercel.sh",
+		reasoning: true,
+		input: ["text", "image"],
+		cost: {
+			input: 1.25,
+			output: 4.25,
+			cacheRead: 0.15,
+			cacheWrite: 0,
+		},
+		contextWindow: 1048576,
+		maxTokens: 1048576,
 	} satisfies Model<"anthropic-messages">,
 	"minimax/minimax-m2": {
 		id: "minimax/minimax-m2",
