@@ -26,7 +26,7 @@ export const defaultModelPerProvider: Record<KnownProvider, string> = {
 	"github-copilot": "gpt-5.4",
 	openrouter: "moonshotai/kimi-k2.6",
 	"vercel-ai-gateway": "zai/glm-5.1",
-	xai: "grok-4.20-0309-reasoning",
+	xai: "grok-4.5",
 	groq: "openai/gpt-oss-120b",
 	cerebras: "zai-glm-4.7",
 	zai: "glm-5.1",
@@ -44,6 +44,8 @@ export const defaultModelPerProvider: Record<KnownProvider, string> = {
 	"kimi-coding": "kimi-for-coding",
 	"cloudflare-workers-ai": "@cf/moonshotai/kimi-k2.6",
 	"cloudflare-ai-gateway": "workers-ai/@cf/moonshotai/kimi-k2.6",
+	"qwen-token-plan": "qwen3.7-max",
+	"qwen-token-plan-cn": "qwen3.7-max",
 	xiaomi: "mimo-v2.5-pro",
 	"xiaomi-token-plan-cn": "mimo-v2.5-pro",
 	"xiaomi-token-plan-ams": "mimo-v2.5-pro",
@@ -289,6 +291,14 @@ export async function resolveModelScopeWithDiagnostics(
 					thinkingLevel = suffix;
 					globPattern = pattern.substring(0, colonIdx);
 				}
+			}
+
+			const exactMatch = findExactModelReferenceMatch(globPattern, availableModels);
+			if (exactMatch) {
+				if (!scopedModels.find((sm) => modelsAreEqual(sm.model, exactMatch))) {
+					scopedModels.push({ model: exactMatch, thinkingLevel });
+				}
+				continue;
 			}
 
 			// Match against "provider/modelId" format OR just model ID
