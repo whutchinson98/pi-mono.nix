@@ -10,7 +10,6 @@
   writableTmpDirAsHomeHook,
   ripgrep,
   fd,
-  jq,
   makeBinaryWrapper,
   stdenvNoCC,
   src,
@@ -19,7 +18,7 @@ let
   version = (lib.importJSON (src + "/packages/coding-agent/package.json")).version;
   modelData = fetchurl {
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
-    hash = "sha512-hzHE7Z8l5mgJk+ke67Lge0rwS2+wbKJrFKl9o5M1R1rh33+cCT7D1AHz1OAtX5wFs90E1/BTGhyJRTUHaMxGvQ==";
+    hash = "sha512-m3IZD4g3er0V8TC9+Vpgw/sjTKqcJlkcIBy/JvsgRubuuik3tAVzyugUg4rVrShIkkOT69mEd34NEqKUIsl6JQ==";
   };
 in
 buildNpmPackage (finalAttrs: {
@@ -36,48 +35,18 @@ buildNpmPackage (finalAttrs: {
   # Skip native module rebuild for unneeded workspaces (e.g. canvas from web-ui)
   npmRebuildFlags = [ "--ignore-scripts" ];
 
-  nativeBuildInputs = [
-    jq
-    makeBinaryWrapper
-  ];
+  nativeBuildInputs = [ makeBinaryWrapper ];
 
   # Build workspace dependencies in order, then the coding-agent.
   # The generated model values are ignored by the source repository, and
   # regenerating them requires network access. Hydrate them from the matching
-  # published pi-ai package, then adapt its flat schema to the grouped schema
-  # expected by the current source.
+  # published pi-ai package.
   buildPhase = ''
     runHook preBuild
 
     dataDir=packages/ai/src/providers/data
     mkdir -p "$dataDir"
     tar -xzf ${modelData} --strip-components=4 -C "$dataDir" package/dist/providers/data
-    rm "$dataDir/.manifest.json"
-
-    structures=$(mktemp)
-    fileHashes=$(mktemp)
-    fileHashesJson=$(mktemp)
-    for path in "$dataDir"/*.json; do
-      provider=$(basename "$path" .json)
-      jq -cS \
-        'if all(.[]; type == "object" and has("api")) then reduce to_entries[] as $model ({}; .[$model.value.api][$model.key] = $model.value) else . end' \
-        "$path" > "$path.tmp"
-      mv "$path.tmp" "$path"
-      jq -c --arg provider "$provider" \
-        '{key: $provider, value: (to_entries | map(.key as $api | .value | keys[] | {key: ., value: $api}) | from_entries)}' \
-        "$path" >> "$structures"
-      jq -nc --arg file "$(basename "$path")" \
-        --arg hash "$(sha256sum "$path" | cut -d " " -f 1)" \
-        '{key: $file, value: $hash}' >> "$fileHashes"
-    done
-
-    structure=$(jq -csS 'from_entries' "$structures")
-    structureHash=$(printf '%s' "$structure" | sha256sum | cut -d ' ' -f 1)
-    jq -csS 'from_entries' "$fileHashes" > "$fileHashesJson"
-    jq -nS --arg structureHash "$structureHash" --slurpfile files "$fileHashesJson" \
-      '{schemaVersion: 2, structureHash: $structureHash, files: $files[0]}' \
-      > "$dataDir/.manifest.json"
-    rm "$structures" "$fileHashes" "$fileHashesJson"
 
     npm run build:offline --workspace=packages/ai
     npx tsgo -p packages/tui/tsconfig.build.json
